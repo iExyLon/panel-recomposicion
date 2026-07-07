@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Panel Recomposición Corporal & Fútbol</title>
+<meta name="theme-color" content="#0a0a0d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Panel Recomp">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --accent: #ccff00;
+    --accent-2: #ff5722;
+    --bg-dark: #0a0a0d;
+    --bg-card: #1e1e24;
+    --bg-card-2: #26262f;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg-dark);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-image: radial-gradient(circle at 50% 0%, #1a1a20 0%, #0a0a0d 60%);
+  }
+  .accent-text { color: var(--accent); }
+  .accent-bg { background-color: var(--accent); }
+  .accent2-text { color: var(--accent-2); }
+  .accent2-bg { background-color: var(--accent-2); }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid #2e2e38;
+    border-radius: 16px;
+  }
+  .card-2 { background: var(--bg-card-2); }
+  .tab-content { display: none; animation: fadeIn .25s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+
+  .navbtn { transition: all .15s ease; }
+  .navbtn.active-nav { color: var(--accent); }
+  .navbtn.active-nav svg { filter: drop-shadow(0 0 6px rgba(204,255,0,.6)); }
+
+  .macro-bar-track { background: #33333d; border-radius: 999px; overflow: hidden; height: 10px; }
+  .macro-bar-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+
+  .kcal-ring {
+    background: conic-gradient(var(--accent) 0deg, var(--accent) calc(var(--pct,0)*3.6deg), #33333d calc(var(--pct,0)*3.6deg), #33333d 360deg);
+    border-radius: 50%;
+  }
+
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .chevron { transform: rotate(180deg); }
+  .chevron { transition: transform .2s ease; }
+
+  input[type="checkbox"].ex-check {
+    appearance: none; -webkit-appearance: none;
+    width: 24px; height: 24px; border-radius: 8px;
+    border: 2px solid #4a4a55; background: #26262f;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer; transition: all .15s ease;
+  }
+  input[type="checkbox"].ex-check:checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  input[type="checkbox"].ex-check:checked::after {
+    content: "✓"; color: #0a0a0d; font-weight: 900; font-size: 15px;
+  }
+  .ex-row.done .ex-name { text-decoration: line-through; opacity: .45; }
+
+  .glow-btn {
+    background: var(--accent); color: #0a0a0d; font-weight: 800;
+    box-shadow: 0 0 20px rgba(204,255,0,.25);
+  }
+  .glow-btn:active { transform: scale(.97); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 10px; }
+
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+</style>
+</head>
+<body class="text-gray-100 min-h-screen pb-24">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 backdrop-blur bg-black/70 border-b border-white/10 px-4 py-3">
+  <div class="flex items-center justify-between max-w-lg mx-auto">
+    <div>
+      <h1 class="text-lg font-black tracking-tight">PANEL <span class="accent-text">RECOMP</span></h1>
+      <p class="text-[11px] text-gray-400 -mt-1">Recomposición corporal · Rendimiento fútbol</p>
+    </div>
+    <div class="text-right">
+      <p class="text-xs text-gray-400">85 kg · 1.77 m · 27 a</p>
+      <p id="header-date" class="text-[11px] accent-text font-semibold"></p>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-lg mx-auto px-4 pt-4">
+
+  <!-- ============ TAB 1: NUTRICIÓN ============ -->
+  <section id="tab-nutricion" class="tab-content active space-y-4">
+
+    <div class="card p-5">
+      <div class="flex items-center gap-4">
+        <div class="kcal-ring w-24 h-24 flex items-center justify-center shrink-0" style="--pct:100">
+          <div class="w-[76px] h-[76px] rounded-full bg-[#1e1e24] flex flex-col items-center justify-center">
+            <span class="text-xl font-black accent-text">2000</span>
+            <span class="text-[10px] text-gray-400">kcal/día</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-gray-400 font-bold">Déficit estimado</p>
+          <p class="text-sm text-gray-300 mt-1">Objetivo diario para bajar grasa manteniendo músculo, calculado desde tu gasto energético (~2500-2600 kcal) menos el déficit.</p>
+          <span class="pill accent2-bg text-black mt-2 inline-block">Objetivo: -0.5 a -0.7 kg/sem</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-4 flex items-center gap-2"><span class="accent-text">●</span> Macros diarios (85 kg)</h2>
+
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold">🥩 Proteínas</span>
+            <span class="accent-text font-bold">165 g <span class="text-gray-500 font-normal">(660 kcal)</span></span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" style="width:0%; background:var(--accent)" data-w="55%"></div></div>
+          <p class="text-[11px] text-gray-500 mt-1">~1.9 g/kg — clave para preservar masa muscular en déficit.</p>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold">🍚 Carbohidratos</span>
+            <span class="accent2-text font-bold">185 g <span class="text-gray-500 font-normal">(740 kcal)</span></span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" style="width:0%; background:var(--accent-2)" data-w="62%"></div></div>
+          <p class="text-[11px] text-gray-500 mt-1">Concentra la mayoría alrededor del entreno y el partido del finde.</p>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-semibold">🥑 Grasas</span>
+            <span class="font-bold text-blue-300">65 g <span class="text-gray-500 font-normal">(585 kcal)</span></span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" style="width:0%; background:#60a5fa" data-w="45%"></div></div>
+          <p class="text-[11px] text-gray-500 mt-1">No bajar de 0.6 g/kg: soporte hormonal (testosterona, sueño).</p>
+        </div>
+      </div>
+      <p class="text-center text-xs text-gray-500 mt-4 pt-3 border-t border-white/5">Total ≈ 1,985 kcal/día</p>
+    </div>
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-4 flex items-center gap-2">💊 Suplementación inteligente</h2>
+
+      <div class="card-2 rounded-xl p-4 mb-3">
+        <div class="flex justify-between items-center">
+          <p class="font-bold accent-text">Creatina Monohidratada</p>
+          <span class="pill bg-white/10">5 g / día</span>
+        </div>
+        <p class="text-sm text-gray-300 mt-2"><b>Cuándo:</b> A cualquier hora, todos los días (incluso descanso). Ideal post-entreno con el batido de proteína, así no se te olvida.</p>
+        <p class="text-sm text-gray-300 mt-1"><b>Para el fútbol:</b> Mejora la potencia en piques cortos y repetidos (sprints de 10-30m), acelera la recuperación entre esfuerzos explosivos y ayuda a mantener volumen muscular en déficit.</p>
+      </div>
+
+      <div class="card-2 rounded-xl p-4">
+        <div class="flex justify-between items-center">
+          <p class="font-bold accent2-text">Proteína Whey</p>
+          <span class="pill bg-white/10">1.5 scoops (~37g)</span>
+        </div>
+        <p class="text-sm text-gray-300 mt-2"><b>Cuándo:</b> 1 scoop dentro de los 60 min post-entreno + 0.5 scoop como snack nocturno o para completar macros del día.</p>
+        <p class="text-sm text-gray-300 mt-1"><b>Para el fútbol:</b> Facilita alcanzar 165g de proteína sin exceso de comida sólida, acelerando la recuperación muscular entre el gym y el partido del finde.</p>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-3 flex items-center gap-2">🌙 Recuperación: sueño & quema de grasa</h2>
+      <div class="space-y-2" id="recovery-tips"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ TAB 2: RUTINA ============ -->
+  <section id="tab-rutina" class="tab-content space-y-4">
+
+    <div class="card p-4 accent2-text bg-[#2a1a12] border-orange-900/40">
+      <p class="text-sm font-bold flex items-center gap-2">⚠️ ¿Solo 3 días esta semana?</p>
+      <p class="text-xs text-gray-300 mt-1">Prioriza <b>Día 1 (Torso A)</b>, <b>Día 2 (Pierna A - Potencia)</b> y <b>Día 4 (Pierna B - Isquios/Prevención)</b>. El Torso B es el más sacrificable: sus ejercicios se pueden fusionar 10 min al final del Día 1.</p>
+    </div>
+
+    <div id="rutina-container" class="space-y-4"></div>
+
+    <button id="reset-rutina" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 font-semibold">Reiniciar checks de la semana</button>
+  </section>
+
+  <!-- ============ TAB 3: PROGRESO ============ -->
+  <section id="tab-progreso" class="tab-content space-y-4">
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-3">📉 Registrar peso semanal</h2>
+      <form id="weight-form" class="flex gap-2">
+        <input type="number" step="0.1" min="40" max="200" id="weight-input" placeholder="Ej: 84.5" required
+          class="flex-1 bg-[#26262f] border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-[var(--accent)]">
+        <button type="submit" class="glow-btn px-5 rounded-xl text-sm">Guardar</button>
+      </form>
+      <p class="text-[11px] text-gray-500 mt-2">Peso inicial de referencia: <b>85.0 kg</b></p>
+    </div>
+
+    <div id="coach-feedback" class="card p-5 hidden">
+      <p class="text-xs uppercase tracking-wide text-gray-400 font-bold mb-1">🤖 Coach IA dice:</p>
+      <p id="coach-message" class="text-sm text-gray-100"></p>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="font-bold text-sm">Historial</h2>
+        <button id="clear-history" class="text-[11px] text-gray-500 underline">borrar historial</button>
+      </div>
+      <div id="weight-history" class="space-y-2 text-sm">
+        <p class="text-gray-500 text-xs" id="empty-history">Aún no hay registros. ¡Ingresa tu primer peso!</p>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur border-t border-white/10">
+  <div class="max-w-lg mx-auto grid grid-cols-3">
+    <button data-tab="tab-nutricion" class="navbtn active-nav flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 12h14M5 5c0 4 3 4 3 8s-3 4-3 8M19 5c0 4-3 4-3 8s3 4 3 8"/></svg>
+      Nutrición
+    </button>
+    <button data-tab="tab-rutina" class="navbtn flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5l11 11M4 4l3 3M20 20l-3-3M2 8l3 3-3 3M22 16l-3-3 3-3M8 2l3 3-3 3M16 22l-3-3 3-3"/></svg>
+      Rutina
+    </button>
+    <button data-tab="tab-progreso" class="navbtn flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+      Progreso
+    </button>
+  </div>
+</nav>
+
+<script>
+(function(){
+  // ---------- ICONO + MANIFEST PWA (generados en canvas, sin archivos externos) ----------
+  var canvas = document.createElement('canvas');
+  canvas.width = 512; canvas.height = 512;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0d';
+  ctx.fillRect(0, 0, 512, 512);
+  ctx.fillStyle = '#1e1e24';
+  ctx.beginPath();
+  ctx.arc(256, 256, 236, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#ccff00';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+  ctx.fillStyle = '#ccff00';
+  ctx.font = '900 240px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('R', 256, 280);
+  var iconUrl = canvas.toDataURL('image/png');
+
+  [['apple-touch-icon', iconUrl], ['icon', iconUrl]].forEach(function(pair){
+    var link = document.createElement('link');
+    link.rel = pair[0];
+    link.href = pair[1];
+    document.head.appendChild(link);
+  });
+
+  var manifest = {
+    name: 'Panel Recomposición Corporal & Fútbol',
+    short_name: 'Panel Recomp',
+    start_url: './',
+    scope: './',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0a0a0d',
+    theme_color: '#0a0a0d',
+    icons: [
+      { src: iconUrl, sizes: '512x512', type: 'image/png' },
+      { src: iconUrl, sizes: '192x192', type: 'image/png' }
+    ]
+  };
+  var manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  var manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = URL.createObjectURL(manifestBlob);
+  document.head.appendChild(manifestLink);
+
+  // ---------- FECHA HEADER ----------
+  var d = new Date();
+  document.getElementById('header-date').textContent = d.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'short' });
+
+  // ---------- NAV ----------
+  var navBtns = document.querySelectorAll('.navbtn');
+  navBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      navBtns.forEach(function(b){ b.classList.remove('active-nav'); });
+      btn.classList.add('active-nav');
+      document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+
+  // ---------- ANIMAR BARRAS MACROS ----------
+  setTimeout(function(){
+    document.querySelectorAll('.macro-bar-fill').forEach(function(el){
+      el.style.width = el.dataset.w;
+    });
+  }, 150);
+
+  // ---------- RECOVERY TIPS ----------
+  var tips = [
+    {
+      title: '😴 Dormir 7-8h reales (no solo en cama)',
+      body: 'La falta de sueño eleva el cortisol y la grelina (hormona del hambre), favoreciendo la acumulación de grasa abdominal. Apaga pantallas 30-45 min antes de dormir y mantén un horario fijo, incluso el fin de semana del partido.'
+    },
+    {
+      title: '🌡️ Habitación fresca y oscura (18-20°C)',
+      body: 'Bajar la temperatura corporal favorece la liberación de hormona de crecimiento durante el sueño profundo, clave para recuperar fibras musculares dañadas en el gym y en la cancha.'
+    },
+    {
+      title: '🧘 Evitar cafeína después de las 16:00',
+      body: 'La cafeína tiene una vida media de 5-6h. Tomarla tarde reduce el sueño profundo aunque "sientas que duermes bien", ralentizando la recuperación y la quema de grasa nocturna (el cuerpo quema más grasa en sueño profundo).'
+    }
+  ];
+  var recEl = document.getElementById('recovery-tips');
+  tips.forEach(function(tip){
+    var det = document.createElement('details');
+    det.className = 'card-2 rounded-xl px-4 py-3';
+    det.innerHTML =
+      '<summary class="flex justify-between items-center font-semibold text-sm">' + tip.title +
+      '<svg class="chevron shrink-0 ml-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>' +
+      '<p class="text-xs text-gray-300 mt-2 leading-relaxed">' + tip.body + '</p>';
+    recEl.appendChild(det);
+  });
+
+  // ---------- RUTINA DATA ----------
+  var rutina = [
+    {
+      id: 'd1', dia: 'Día 1', nombre: 'Torso A · Empuje/Tracción Fuerza', color: 'var(--accent)',
+      ejercicios: [
+        {n:'Press banca plano (barra/máquina)', sr:'4 x 6-8', rir:'2', t:'Fuerza de tren superior para choques de cuerpo y proteger el balón bajo presión.'},
+        {n:'Remo en polea baja', sr:'4 x 8-10', rir:'2', t:'Fortalece la espalda alta, mejora postura para cabecear y reduce riesgo de lesión de hombro en caídas.'},
+        {n:'Press inclinado con mancuernas', sr:'3 x 8-10', rir:'2', t:'Estabilidad de hombro en duelos aéreos y empujes cuerpo a cuerpo.'},
+        {n:'Jalón al pecho en polea', sr:'3 x 10-12', rir:'2', t:'Tracción de dorsales: ayuda a mantener el tronco estable al correr y girar.'},
+        {n:'Face pull en polea', sr:'3 x 12-15', rir:'1', t:'Salud de hombros y postura, previene lesiones por el movimiento repetitivo de brazos al correr.'},
+        {n:'Plancha abdominal (RKC)', sr:'3 x 30-40s', rir:'1', t:'Core fuerte = mejor transferencia de fuerza de piernas a torso al patear y cambiar de dirección.'}
+      ]
+    },
+    {
+      id: 'd2', dia: 'Día 2', nombre: 'Pierna A · Fuerza y Potencia (Sprint)', color: 'var(--accent-2)',
+      ejercicios: [
+        {n:'Sentadilla en máquina Smith o libre', sr:'4 x 5-6', rir:'2', t:'Base de fuerza para la potencia de arranque en el sprint y el pique inicial.'},
+        {n:'Prensa 45°', sr:'4 x 8-10', rir:'2', t:'Fuerza de cuádriceps/glúteo sin sobrecargar la espalda; clave para frenadas y arrancadas explosivas.'},
+        {n:'Zancada búlgara con mancuernas', sr:'3 x 8 c/pierna', rir:'2', t:'Trabajo unilateral: mejora estabilidad de rodilla y previene lesiones al cambiar de dirección.'},
+        {n:'Extensión de cuádriceps en máquina', sr:'3 x 12-15', rir:'1', t:'Aísla el cuádriceps para proteger la rodilla en los frenados bruscos del fútbol.'},
+        {n:'Elevación de talones (gemelos) de pie', sr:'4 x 12-15', rir:'1', t:'Potencia de tobillo, esencial para la explosividad del primer paso.'},
+        {n:'Sprint corto o skipping en cinta (opcional)', sr:'6 x 15-20s', rir:'-', t:'Transferencia directa: activa patrón neuromuscular de sprint real.'}
+      ]
+    },
+    {
+      id: 'd3', dia: 'Día 3', nombre: 'Torso B · Hipertrofia y Estabilidad', color: 'var(--accent)',
+      ejercicios: [
+        {n:'Press militar con mancuernas', sr:'3 x 8-10', rir:'2', t:'Fuerza de hombros para proteger el balón con el cuerpo y ganar duelos aéreos.'},
+        {n:'Remo en máquina (T-bar o convergente)', sr:'3 x 10-12', rir:'2', t:'Espalda media fuerte para mantener el tronco erguido durante 90 minutos de partido.'},
+        {n:'Aperturas en polea o máquina pec-deck', sr:'3 x 12-15', rir:'1', t:'Salud articular de hombro, complementa el trabajo de empuje.'},
+        {n:'Curl de bíceps con mancuernas', sr:'3 x 10-12', rir:'1', t:'Trabajo accesorio: mejora agarre y equilibrio de brazos en carrera.'},
+        {n:'Extensión de tríceps en polea', sr:'3 x 10-12', rir:'1', t:'Fuerza de brazo para empujes y caídas controladas.'},
+        {n:'Rueda abdominal o crunch en polea alta', sr:'3 x 12-15', rir:'1', t:'Core anti-flexión: fundamental para la potencia de disparo y prevenir pubalgia.'}
+      ]
+    },
+    {
+      id: 'd4', dia: 'Día 4', nombre: 'Pierna B · Isquios y Prevención', color: 'var(--accent-2)',
+      ejercicios: [
+        {n:'Camilla de isquiotibiales (curl femoral acostado)', sr:'4 x 10-12', rir:'2', t:'Directamente previene el desgarro de isquiotibiales, la lesión más común al esprintar.'},
+        {n:'Peso muerto rumano con mancuernas', sr:'4 x 8-10', rir:'2', t:'Fuerza de cadena posterior: potencia para frenar en carrera y proteger la zona lumbar.'},
+        {n:'Hip thrust en máquina o barra', sr:'4 x 8-10', rir:'2', t:'Potencia de glúteo = velocidad punta y estabilidad de cadera, reduce riesgo de pubalgia.'},
+        {n:'Aductores en máquina', sr:'3 x 12-15', rir:'1', t:'Fortalece la zona inguinal, clave para prevenir la pubalgia del futbolista.'},
+        {n:'Abductores en máquina', sr:'3 x 12-15', rir:'1', t:'Estabilidad lateral de cadera para cambios de dirección y regates.'},
+        {n:'Elevación de talones sentado', sr:'3 x 15', rir:'1', t:'Complementa la potencia de tobillo trabajada el Día 2.'}
+      ]
+    }
+  ];
+
+  var STORAGE_KEY = 'panelfutbol_checks_v1';
+  var checks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+  function saveChecks(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(checks)); }
+
+  var container = document.getElementById('rutina-container');
+  rutina.forEach(function(day){
+    var card = document.createElement('div');
+    card.className = 'card p-4';
+
+    var doneCount = day.ejercicios.filter(function(_, i){ return checks[day.id+'_'+i]; }).length;
+
+    var html = '<div class="flex justify-between items-center mb-3">' +
+      '<div><p class="text-[11px] font-bold uppercase tracking-wide" style="color:'+day.color+'">'+day.dia+'</p>' +
+      '<h3 class="font-bold text-sm">'+day.nombre+'</h3></div>' +
+      '<span class="pill bg-white/10 progress-pill" data-day="'+day.id+'">'+doneCount+'/'+day.ejercicios.length+'</span>' +
+      '</div><div class="space-y-2">';
+
+    day.ejercicios.forEach(function(ex, i){
+      var key = day.id + '_' + i;
+      var isDone = !!checks[key];
+      html += '<div class="ex-row flex gap-3 items-start p-3 rounded-lg card-2 '+(isDone?'done':'')+'" data-key="'+key+'" data-day="'+day.id+'">' +
+        '<input type="checkbox" class="ex-check mt-0.5" '+(isDone?'checked':'')+'>' +
+        '<div class="flex-1">' +
+          '<p class="ex-name text-sm font-semibold">'+ex.n+'</p>' +
+          '<div class="flex gap-2 mt-1 flex-wrap">' +
+            '<span class="pill bg-black/40">'+ex.sr+'</span>' +
+            '<span class="pill bg-black/40">RIR '+ex.rir+'</span>' +
+          '</div>' +
+          '<p class="text-[11px] text-gray-400 mt-1.5"><span class="font-bold accent-text">⚽ Transferencia: </span>'+ex.t+'</p>' +
+        '</div>' +
+      '</div>';
+    });
+
+    html += '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+
+  container.addEventListener('change', function(e){
+    if (!e.target.classList.contains('ex-check')) return;
+    var row = e.target.closest('.ex-row');
+    var key = row.dataset.key;
+    var dayId = row.dataset.day;
+    checks[key] = e.target.checked;
+    row.classList.toggle('done', e.target.checked);
+    saveChecks();
+
+    var dayCard = row.closest('.card');
+    var total = dayCard.querySelectorAll('.ex-row').length;
+    var done = dayCard.querySelectorAll('.ex-row.done').length;
+    dayCard.querySelector('.progress-pill').textContent = done + '/' + total;
+  });
+
+  document.getElementById('reset-rutina').addEventListener('click', function(){
+    if (!confirm('¿Reiniciar todos los checks de la semana?')) return;
+    checks = {};
+    saveChecks();
+    document.querySelectorAll('.ex-check').forEach(function(cb){ cb.checked = false; });
+    document.querySelectorAll('.ex-row').forEach(function(r){ r.classList.remove('done'); });
+    document.querySelectorAll('.progress-pill').forEach(function(p){
+      var total = p.closest('.card').querySelectorAll('.ex-row').length;
+      p.textContent = '0/' + total;
+    });
+  });
+
+  // ---------- PROGRESO / PESO ----------
+  var WEIGHT_KEY = 'panelfutbol_weights_v1';
+  var PESO_INICIAL = 85.0;
+  var history = JSON.parse(localStorage.getItem(WEIGHT_KEY) || '[]');
+
+  var form = document.getElementById('weight-form');
+  var input = document.getElementById('weight-input');
+  var histEl = document.getElementById('weight-history');
+  var emptyMsg = document.getElementById('empty-history');
+  var feedbackCard = document.getElementById('coach-feedback');
+  var feedbackMsg = document.getElementById('coach-message');
+
+  function renderHistory(){
+    histEl.querySelectorAll('.hist-row').forEach(function(r){ r.remove(); });
+    if (history.length === 0) {
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    var sorted = history.slice().sort(function(a,b){ return b.ts - a.ts; });
+    sorted.forEach(function(entry, idx){
+      var prevWeight = idx < sorted.length - 1 ? sorted[idx+1].weight : PESO_INICIAL;
+      var diff = entry.weight - prevWeight;
+      var diffStr = diff === 0 ? '=' : (diff > 0 ? '+'+diff.toFixed(1) : diff.toFixed(1));
+      var diffColor = diff < 0 ? 'text-lime-400' : (diff > 0 ? 'text-orange-400' : 'text-gray-400');
+
+      var row = document.createElement('div');
+      row.className = 'hist-row flex justify-between items-center py-2 border-b border-white/5 last:border-0';
+      row.innerHTML =
+        '<div><p class="font-semibold">'+entry.weight.toFixed(1)+' kg</p>' +
+        '<p class="text-[11px] text-gray-500">'+entry.date+'</p></div>' +
+        '<span class="font-bold text-sm '+diffColor+'">'+diffStr+' kg</span>';
+      histEl.appendChild(row);
+    });
+  }
+
+  function coachFeedback(weight){
+    var last = history.length > 1 ? history[history.length-2].weight : PESO_INICIAL;
+    var diff = weight - last;
+    var msg, emoji;
+
+    if (diff <= -0.3) {
+      emoji = '🔥';
+      msg = 'Excelente, bajaste ' + Math.abs(diff).toFixed(1) + ' kg. El déficit y la rutina están funcionando. Mantén las 165g de proteína para no perder músculo — vas directo a sentirte más ligero en la cancha.';
+    } else if (diff < 0) {
+      emoji = '✅';
+      msg = 'Bajaste ' + Math.abs(diff).toFixed(1) + ' kg, ritmo sano y sostenible. Sigue así: bajadas lentas preservan mejor la masa muscular que las bruscas.';
+    } else if (diff === 0) {
+      emoji = '⚖️';
+      msg = 'Peso estable esta semana. Revisa que estés cumpliendo los 5g de creatina (puede retener algo de agua) y confirma que el déficit calórico se mantiene real, no solo estimado.';
+    } else if (diff <= 0.4) {
+      emoji = '🧐';
+      msg = 'Subiste ' + diff.toFixed(1) + ' kg. Puede ser retención de agua/creatina o un finde con más carbohidratos por el partido. No entres en pánico, mira la tendencia de 2-3 semanas antes de ajustar.';
+    } else {
+      emoji = '⚠️';
+      msg = 'Subiste ' + diff.toFixed(1) + ' kg. Revisa el registro de comidas de esta semana y asegúrate de mantener el déficit de 2000 kcal. Un ajuste a tiempo evita perder el progreso acumulado.';
+    }
+    feedbackMsg.textContent = emoji + ' ' + msg;
+    feedbackCard.classList.remove('hidden');
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var w = parseFloat(input.value);
+    if (isNaN(w)) return;
+
+    coachFeedback(w);
+
+    history.push({
+      weight: w,
+      date: new Date().toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'}),
+      ts: Date.now()
+    });
+    localStorage.setItem(WEIGHT_KEY, JSON.stringify(history));
+    renderHistory();
+    input.value = '';
+    input.blur();
+  });
+
+  document.getElementById('clear-history').addEventListener('click', function(){
+    if (!confirm('¿Borrar todo el historial de peso?')) return;
+    history = [];
+    localStorage.setItem(WEIGHT_KEY, JSON.stringify(history));
+    feedbackCard.classList.add('hidden');
+    renderHistory();
+  });
+
+  renderHistory();
+})();
+</script>
+</body>
+</html>
