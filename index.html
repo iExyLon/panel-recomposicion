@@ -43,11 +43,12 @@
   .navbtn.active-nav svg { filter: drop-shadow(0 0 6px rgba(204,255,0,.6)); }
 
   .macro-bar-track { background: #33333d; border-radius: 999px; overflow: hidden; height: 10px; }
-  .macro-bar-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+  .macro-bar-fill { height: 100%; border-radius: 999px; transition: width .6s ease; }
 
   .kcal-ring {
-    background: conic-gradient(var(--accent) 0deg, var(--accent) calc(var(--pct,0)*3.6deg), #33333d calc(var(--pct,0)*3.6deg), #33333d 360deg);
+    background: conic-gradient(var(--ring-color, var(--accent)) 0deg, var(--ring-color, var(--accent)) calc(var(--pct,0)*3.6deg), #33333d calc(var(--pct,0)*3.6deg), #33333d 360deg);
     border-radius: 50%;
+    transition: background 1s ease;
   }
 
   details > summary { list-style: none; cursor: pointer; }
@@ -75,11 +76,29 @@
     box-shadow: 0 0 20px rgba(204,255,0,.25);
   }
   .glow-btn:active { transform: scale(.97); }
+  .glow-btn:disabled { opacity: .6; }
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-thumb { background: #3a3a44; border-radius: 10px; }
 
   .pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+
+  .edit-input {
+    background: #1a1a20; border: 1px solid #3a3a44; border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; color: #fff; width: 100%;
+  }
+  .edit-input:focus { outline: none; border-color: var(--accent); }
+  textarea.edit-input { resize: vertical; font-family: inherit; }
+
+  select.edit-input {
+    appearance: none; -webkit-appearance: none;
+    background-color: #1a1a20;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ccff00' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 32px;
+  }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen pb-24">
@@ -180,8 +199,83 @@
 
   </section>
 
-  <!-- ============ TAB 2: RUTINA ============ -->
+  <!-- ============ TAB 2: DIARIO ============ -->
+  <section id="tab-diario" class="tab-content space-y-4">
+
+    <div class="card p-5">
+      <div class="flex items-center gap-4">
+        <div class="kcal-ring w-24 h-24 flex items-center justify-center shrink-0" id="diary-ring" style="--pct:0">
+          <div class="w-[76px] h-[76px] rounded-full bg-[#1e1e24] flex flex-col items-center justify-center">
+            <span class="text-xl font-black accent-text" id="diary-kcal-consumed">0</span>
+            <span class="text-[10px] text-gray-400">/ 2000 kcal</span>
+          </div>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs uppercase tracking-wide text-gray-400 font-bold">Hoy has comido</p>
+          <p class="text-sm text-gray-300 mt-1" id="diary-kcal-restante">Te quedan 2000 kcal disponibles.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mt-4 pt-4 border-t border-white/5">
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-semibold">🥩 Proteínas</span>
+            <span id="diary-p-text" class="accent-text font-bold">0 / 165 g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" id="diary-p-bar" style="width:0%; background:var(--accent)"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-semibold">🍚 Carbohidratos</span>
+            <span id="diary-c-text" class="accent2-text font-bold">0 / 185 g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" id="diary-c-bar" style="width:0%; background:var(--accent-2)"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-semibold">🥑 Grasas</span>
+            <span id="diary-f-text" class="font-bold text-blue-300">0 / 65 g</span>
+          </div>
+          <div class="macro-bar-track"><div class="macro-bar-fill" id="diary-f-bar" style="width:0%; background:#60a5fa"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-3">🔍 Buscar alimento</h2>
+      <input type="text" id="food-search-input" placeholder="Ej: pollo, arroz, yogurt..."
+        class="w-full bg-[#26262f] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[var(--accent)]">
+
+      <div id="food-results-local" class="space-y-2 mt-3"></div>
+
+      <button id="btn-search-online" class="hidden w-full mt-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300 font-semibold">
+        🌐 Buscar también en línea (Open Food Facts)
+      </button>
+      <p id="food-online-status" class="text-xs text-gray-500 mt-2 hidden"></p>
+      <div id="food-results-online" class="space-y-2 mt-2"></div>
+    </div>
+
+    <div class="card p-5">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="font-bold text-sm">📋 Diario de hoy</h2>
+        <button id="clear-diary" class="text-[11px] text-gray-500 underline">vaciar diario</button>
+      </div>
+      <div id="diary-list" class="space-y-2 text-sm">
+        <p class="text-gray-500 text-xs" id="empty-diary">Aún no has registrado comidas hoy.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ TAB 3: RUTINA ============ -->
   <section id="tab-rutina" class="tab-content space-y-4">
+
+    <div id="today-banner" class="card p-4"></div>
+
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-3 flex items-center gap-2">📅 Planificador semanal</h2>
+      <div id="planner-list" class="space-y-2"></div>
+    </div>
 
     <div class="card p-4 accent2-text bg-[#2a1a12] border-orange-900/40">
       <p class="text-sm font-bold flex items-center gap-2">⚠️ ¿Solo 3 días esta semana?</p>
@@ -190,10 +284,13 @@
 
     <div id="rutina-container" class="space-y-4"></div>
 
-    <button id="reset-rutina" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 font-semibold">Reiniciar checks de la semana</button>
+    <div class="flex gap-2">
+      <button id="reset-rutina" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 font-semibold">Reiniciar checks</button>
+      <button id="restore-rutina-default" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-400 font-semibold">Restaurar rutina original</button>
+    </div>
   </section>
 
-  <!-- ============ TAB 3: PROGRESO ============ -->
+  <!-- ============ TAB 4: PROGRESO ============ -->
   <section id="tab-progreso" class="tab-content space-y-4">
 
     <div class="card p-5">
@@ -227,10 +324,14 @@
 
 <!-- BOTTOM NAV -->
 <nav class="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur border-t border-white/10">
-  <div class="max-w-lg mx-auto grid grid-cols-3">
+  <div class="max-w-lg mx-auto grid grid-cols-4">
     <button data-tab="tab-nutricion" class="navbtn active-nav flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 12h14M5 5c0 4 3 4 3 8s-3 4-3 8M19 5c0 4-3 4-3 8s3 4 3 8"/></svg>
       Nutrición
+    </button>
+    <button data-tab="tab-diario" class="navbtn flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+      Diario
     </button>
     <button data-tab="tab-rutina" class="navbtn flex flex-col items-center gap-1 py-3 text-gray-400 text-[11px] font-semibold">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5l11 11M4 4l3 3M20 20l-3-3M2 8l3 3-3 3M22 16l-3-3 3-3M8 2l3 3-3 3M16 22l-3-3 3-3"/></svg>
@@ -292,6 +393,10 @@
   manifestLink.href = URL.createObjectURL(manifestBlob);
   document.head.appendChild(manifestLink);
 
+  // ---------- HELPERS ----------
+  function escAttr(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
   // ---------- FECHA HEADER ----------
   var d = new Date();
   document.getElementById('header-date').textContent = d.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'short' });
@@ -308,9 +413,9 @@
     });
   });
 
-  // ---------- ANIMAR BARRAS MACROS ----------
+  // ---------- ANIMAR BARRAS MACROS (nutrición estática) ----------
   setTimeout(function(){
-    document.querySelectorAll('.macro-bar-fill').forEach(function(el){
+    document.querySelectorAll('.macro-bar-fill[data-w]').forEach(function(el){
       el.style.width = el.dataset.w;
     });
   }, 150);
@@ -341,8 +446,272 @@
     recEl.appendChild(det);
   });
 
-  // ---------- RUTINA DATA ----------
-  var rutina = [
+  // =====================================================================
+  // DIARIO DE COMIDAS / CONTADOR DE CALORÍAS
+  // =====================================================================
+  var FOOD_DB = [
+    {n:'Pechuga de pollo (cocida)', k:165, p:31, c:0, f:3.6, s:150},
+    {n:'Carne de vacuno molida 90/10 (cocida)', k:217, p:26, c:0, f:12, s:150},
+    {n:'Lomo de cerdo (cocido)', k:143, p:26, c:0, f:4, s:150},
+    {n:'Salmón (cocido)', k:208, p:20, c:0, f:13, s:150},
+    {n:'Atún en agua (lata)', k:116, p:26, c:0, f:1, s:120},
+    {n:'Huevo entero', k:155, p:13, c:1.1, f:11, s:50},
+    {n:'Clara de huevo', k:52, p:11, c:0.7, f:0.2, s:100},
+    {n:'Pechuga de pavo', k:135, p:30, c:0, f:1, s:150},
+    {n:'Proteína Whey (polvo)', k:380, p:80, c:8, f:5, s:30},
+    {n:'Tofu firme', k:144, p:15, c:3, f:9, s:100},
+    {n:'Yogur griego natural', k:97, p:9, c:3.6, f:5, s:170},
+    {n:'Queso fresco/cottage', k:98, p:11, c:3.4, f:4.3, s:100},
+    {n:'Camarones (cocidos)', k:99, p:24, c:0.2, f:0.3, s:100},
+    {n:'Arroz blanco (cocido)', k:130, p:2.7, c:28, f:0.3, s:150},
+    {n:'Arroz integral (cocido)', k:111, p:2.6, c:23, f:0.9, s:150},
+    {n:'Papa (cocida)', k:87, p:1.9, c:20, f:0.1, s:200},
+    {n:'Camote/batata (cocido)', k:90, p:2, c:21, f:0.1, s:200},
+    {n:'Pasta (cocida)', k:131, p:5, c:25, f:1.1, s:150},
+    {n:'Avena (cruda)', k:389, p:17, c:66, f:7, s:50},
+    {n:'Pan integral', k:247, p:13, c:41, f:3.4, s:60},
+    {n:'Pan blanco', k:265, p:9, c:49, f:3.2, s:60},
+    {n:'Quinoa (cocida)', k:120, p:4.4, c:21, f:1.9, s:150},
+    {n:'Plátano', k:89, p:1.1, c:23, f:0.3, s:120},
+    {n:'Choclo/maíz (cocido)', k:96, p:3.4, c:21, f:1.5, s:150},
+    {n:'Lentejas (cocidas)', k:116, p:9, c:20, f:0.4, s:150},
+    {n:'Garbanzos (cocidos)', k:164, p:8.9, c:27, f:2.6, s:150},
+    {n:'Porotos negros (cocidos)', k:132, p:8.9, c:24, f:0.5, s:150},
+    {n:'Palta/aguacate', k:160, p:2, c:9, f:15, s:50},
+    {n:'Aceite de oliva', k:884, p:0, c:0, f:100, s:10},
+    {n:'Mantequilla de maní', k:588, p:25, c:20, f:50, s:20},
+    {n:'Almendras', k:579, p:21, c:22, f:50, s:30},
+    {n:'Nueces', k:654, p:15, c:14, f:65, s:30},
+    {n:'Semillas de chía', k:486, p:17, c:42, f:31, s:15},
+    {n:'Leche descremada', k:34, p:3.4, c:5, f:0.1, s:250},
+    {n:'Leche entera', k:61, p:3.2, c:4.8, f:3.3, s:250},
+    {n:'Queso gouda', k:356, p:25, c:2.2, f:27, s:30},
+    {n:'Queso mozzarella', k:280, p:28, c:3.1, f:17, s:30},
+    {n:'Brócoli (cocido)', k:35, p:2.4, c:7, f:0.4, s:150},
+    {n:'Espinaca (cruda)', k:23, p:2.9, c:3.6, f:0.4, s:100},
+    {n:'Tomate', k:18, p:0.9, c:3.9, f:0.2, s:100},
+    {n:'Lechuga', k:15, p:1.4, c:2.9, f:0.2, s:50},
+    {n:'Zanahoria', k:41, p:0.9, c:10, f:0.2, s:100},
+    {n:'Pepino', k:15, p:0.7, c:3.6, f:0.1, s:100},
+    {n:'Zapallo italiano', k:17, p:1.2, c:3.1, f:0.3, s:150},
+    {n:'Manzana', k:52, p:0.3, c:14, f:0.2, s:150},
+    {n:'Naranja', k:47, p:0.9, c:12, f:0.1, s:150},
+    {n:'Frutilla', k:32, p:0.7, c:7.7, f:0.3, s:100},
+    {n:'Uva', k:69, p:0.7, c:18, f:0.2, s:100},
+    {n:'Sandía', k:30, p:0.6, c:7.6, f:0.2, s:150}
+  ];
+
+  var GOALS = { kcal: 2000, p: 165, c: 185, f: 65 };
+  var DIARY_KEY = 'panelfutbol_diary_v1';
+
+  function todayKey(){
+    var t = new Date();
+    return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+  }
+  function loadDiary(){
+    var all = JSON.parse(localStorage.getItem(DIARY_KEY) || '{}');
+    return all[todayKey()] || [];
+  }
+  function persistDiary(){
+    var all = JSON.parse(localStorage.getItem(DIARY_KEY) || '{}');
+    all[todayKey()] = diaryEntries;
+    localStorage.setItem(DIARY_KEY, JSON.stringify(all));
+  }
+
+  var diaryEntries = loadDiary();
+
+  function setBar(barId, textId, value, goal, unit){
+    var pct = Math.min(100, Math.round(value / goal * 100));
+    document.getElementById(barId).style.width = pct + '%';
+    document.getElementById(textId).textContent = Math.round(value) + ' / ' + goal + ' ' + unit;
+  }
+
+  function renderDiaryTotals(){
+    var totals = diaryEntries.reduce(function(acc, e){
+      acc.kcal += e.kcal; acc.p += e.protein; acc.c += e.carbs; acc.f += e.fat;
+      return acc;
+    }, {kcal:0, p:0, c:0, f:0});
+
+    var pct = Math.min(100, Math.round(totals.kcal / GOALS.kcal * 100));
+    var ring = document.getElementById('diary-ring');
+    ring.style.setProperty('--pct', pct);
+    ring.style.setProperty('--ring-color', totals.kcal > GOALS.kcal ? 'var(--accent-2)' : 'var(--accent)');
+    document.getElementById('diary-kcal-consumed').textContent = Math.round(totals.kcal);
+
+    var restante = GOALS.kcal - totals.kcal;
+    document.getElementById('diary-kcal-restante').textContent = restante >= 0
+      ? 'Te quedan ' + Math.round(restante) + ' kcal disponibles.'
+      : 'Superaste tu meta por ' + Math.round(Math.abs(restante)) + ' kcal.';
+
+    setBar('diary-p-bar', 'diary-p-text', totals.p, GOALS.p, 'g');
+    setBar('diary-c-bar', 'diary-c-text', totals.c, GOALS.c, 'g');
+    setBar('diary-f-bar', 'diary-f-text', totals.f, GOALS.f, 'g');
+  }
+
+  function renderDiaryList(){
+    var listEl = document.getElementById('diary-list');
+    var empty = document.getElementById('empty-diary');
+    listEl.querySelectorAll('.diary-row').forEach(function(r){ r.remove(); });
+    if (diaryEntries.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    diaryEntries.forEach(function(entry, idx){
+      var row = document.createElement('div');
+      row.className = 'diary-row flex justify-between items-center py-2 border-b border-white/5 last:border-0';
+      row.innerHTML = '<div class="min-w-0 flex-1"><p class="font-semibold text-sm truncate">'+escHtml(entry.name)+'</p>' +
+        '<p class="text-[11px] text-gray-500">'+Math.round(entry.grams)+' g · '+Math.round(entry.kcal)+' kcal</p></div>' +
+        '<button class="del-diary-btn text-gray-500 text-lg px-2" data-idx="'+idx+'">✕</button>';
+      listEl.appendChild(row);
+    });
+  }
+
+  document.getElementById('diary-list').addEventListener('click', function(e){
+    var btn = e.target.closest('.del-diary-btn');
+    if (!btn) return;
+    diaryEntries.splice(parseInt(btn.dataset.idx, 10), 1);
+    persistDiary();
+    renderDiaryList();
+    renderDiaryTotals();
+  });
+
+  document.getElementById('clear-diary').addEventListener('click', function(){
+    if (!confirm('¿Vaciar el diario de hoy?')) return;
+    diaryEntries = [];
+    persistDiary();
+    renderDiaryList();
+    renderDiaryTotals();
+  });
+
+  function addFoodToDiary(item, grams){
+    var factor = grams / 100;
+    diaryEntries.push({
+      name: item.n,
+      grams: grams,
+      kcal: item.k * factor,
+      protein: item.p * factor,
+      carbs: item.c * factor,
+      fat: item.f * factor
+    });
+    persistDiary();
+    renderDiaryList();
+    renderDiaryTotals();
+  }
+
+  function buildFoodRow(item, idx, src){
+    var row = document.createElement('div');
+    row.className = 'card-2 rounded-xl p-3 flex items-center gap-2';
+    row.innerHTML =
+      '<div class="flex-1 min-w-0">' +
+        '<p class="text-sm font-semibold truncate">'+escHtml(item.n)+'</p>' +
+        '<p class="text-[11px] text-gray-400">'+Math.round(item.k)+' kcal · P '+Math.round(item.p)+'g · C '+Math.round(item.c)+'g · G '+Math.round(item.f)+'g <span class="text-gray-600">(100g)</span></p>' +
+      '</div>' +
+      '<input type="number" class="food-qty-input edit-input" style="width:56px" value="'+item.s+'" min="1">' +
+      '<button class="btn-add-food glow-btn px-3 py-2 rounded-lg text-xs font-bold" data-idx="'+idx+'" data-src="'+src+'">+</button>';
+    return row;
+  }
+
+  var currentLocalResults = [];
+  var currentOnlineResults = [];
+
+  var searchInput = document.getElementById('food-search-input');
+  var localResultsEl = document.getElementById('food-results-local');
+  var onlineResultsEl = document.getElementById('food-results-online');
+  var onlineBtn = document.getElementById('btn-search-online');
+  var onlineStatus = document.getElementById('food-online-status');
+
+  searchInput.addEventListener('input', function(){
+    var q = searchInput.value.trim().toLowerCase();
+    localResultsEl.innerHTML = '';
+    onlineResultsEl.innerHTML = '';
+    onlineStatus.classList.add('hidden');
+    currentOnlineResults = [];
+
+    if (q.length < 2) {
+      onlineBtn.classList.add('hidden');
+      currentLocalResults = [];
+      return;
+    }
+
+    currentLocalResults = FOOD_DB.filter(function(item){
+      return item.n.toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 8);
+
+    currentLocalResults.forEach(function(item, idx){
+      localResultsEl.appendChild(buildFoodRow(item, idx, 'local'));
+    });
+
+    onlineBtn.classList.remove('hidden');
+  });
+
+  onlineBtn.addEventListener('click', function(){
+    var q = searchInput.value.trim();
+    if (!q) return;
+    onlineStatus.classList.remove('hidden');
+    onlineStatus.textContent = 'Buscando en Open Food Facts...';
+    onlineResultsEl.innerHTML = '';
+
+    var url = 'https://world.openfoodfacts.org/api/v2/search?search_terms=' + encodeURIComponent(q) + '&page_size=8&fields=product_name,brands,nutriments';
+
+    fetch(url).then(function(r){ return r.json(); }).then(function(data){
+      var products = (data.products || []).filter(function(p){
+        return p.product_name && p.nutriments && p.nutriments['energy-kcal_100g'] != null;
+      });
+
+      if (products.length === 0) {
+        onlineStatus.textContent = 'Sin resultados online para "' + q + '".';
+        return;
+      }
+
+      onlineStatus.textContent = 'Resultados online:';
+      currentOnlineResults = products.map(function(p){
+        return {
+          n: p.product_name + (p.brands ? ' — ' + p.brands.split(',')[0] : ''),
+          k: p.nutriments['energy-kcal_100g'] || 0,
+          p: p.nutriments['proteins_100g'] || 0,
+          c: p.nutriments['carbohydrates_100g'] || 0,
+          f: p.nutriments['fat_100g'] || 0,
+          s: 100
+        };
+      });
+
+      currentOnlineResults.forEach(function(item, idx){
+        onlineResultsEl.appendChild(buildFoodRow(item, idx, 'online'));
+      });
+    }).catch(function(){
+      onlineStatus.textContent = 'No se pudo conectar. Revisa tu internet.';
+    });
+  });
+
+  function handleAddClick(e){
+    var btn = e.target.closest('.btn-add-food');
+    if (!btn) return;
+    var idx = parseInt(btn.dataset.idx, 10);
+    var src = btn.dataset.src;
+    var item = src === 'local' ? currentLocalResults[idx] : currentOnlineResults[idx];
+    if (!item) return;
+    var row = btn.closest('.card-2');
+    var grams = parseFloat(row.querySelector('.food-qty-input').value) || item.s;
+    addFoodToDiary(item, grams);
+
+    btn.textContent = '✓';
+    btn.disabled = true;
+    setTimeout(function(){
+      btn.textContent = '+';
+      btn.disabled = false;
+    }, 800);
+  }
+  localResultsEl.addEventListener('click', handleAddClick);
+  onlineResultsEl.addEventListener('click', handleAddClick);
+
+  renderDiaryList();
+  renderDiaryTotals();
+
+  // =====================================================================
+  // RUTINA SMART FIT (editable) + PLANIFICADOR SEMANAL
+  // =====================================================================
+  var RUTINA_DEFAULT = [
     {
       id: 'd1', dia: 'Día 1', nombre: 'Torso A · Empuje/Tracción Fuerza', color: 'var(--accent)',
       ejercicios: [
@@ -389,50 +758,150 @@
     }
   ];
 
+  var RUTINA_KEY = 'panelfutbol_rutina_custom_v1';
+  var rutina = JSON.parse(JSON.stringify(RUTINA_DEFAULT));
+  try {
+    var savedRutina = JSON.parse(localStorage.getItem(RUTINA_KEY) || 'null');
+    if (savedRutina) rutina = savedRutina;
+  } catch(e){}
+
   var STORAGE_KEY = 'panelfutbol_checks_v1';
   var checks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-
   function saveChecks(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(checks)); }
+  function saveRutina(){ localStorage.setItem(RUTINA_KEY, JSON.stringify(rutina)); }
 
-  var container = document.getElementById('rutina-container');
-  rutina.forEach(function(day){
-    var card = document.createElement('div');
-    card.className = 'card p-4';
+  var editingDay = null;
+  var rutinaContainer = document.getElementById('rutina-container');
 
-    var doneCount = day.ejercicios.filter(function(_, i){ return checks[day.id+'_'+i]; }).length;
-
-    var html = '<div class="flex justify-between items-center mb-3">' +
-      '<div><p class="text-[11px] font-bold uppercase tracking-wide" style="color:'+day.color+'">'+day.dia+'</p>' +
-      '<h3 class="font-bold text-sm">'+day.nombre+'</h3></div>' +
-      '<span class="pill bg-white/10 progress-pill" data-day="'+day.id+'">'+doneCount+'/'+day.ejercicios.length+'</span>' +
-      '</div><div class="space-y-2">';
-
-    day.ejercicios.forEach(function(ex, i){
-      var key = day.id + '_' + i;
-      var isDone = !!checks[key];
-      html += '<div class="ex-row flex gap-3 items-start p-3 rounded-lg card-2 '+(isDone?'done':'')+'" data-key="'+key+'" data-day="'+day.id+'">' +
-        '<input type="checkbox" class="ex-check mt-0.5" '+(isDone?'checked':'')+'>' +
-        '<div class="flex-1">' +
-          '<p class="ex-name text-sm font-semibold">'+ex.n+'</p>' +
-          '<div class="flex gap-2 mt-1 flex-wrap">' +
-            '<span class="pill bg-black/40">'+ex.sr+'</span>' +
-            '<span class="pill bg-black/40">RIR '+ex.rir+'</span>' +
-          '</div>' +
-          '<p class="text-[11px] text-gray-400 mt-1.5"><span class="font-bold accent-text">⚽ Transferencia: </span>'+ex.t+'</p>' +
-        '</div>' +
-      '</div>';
+  function syncEditingInputsToModel(dayId){
+    var dayIdx = rutina.findIndex(function(dd){ return dd.id === dayId; });
+    if (dayIdx === -1) return;
+    var card = document.getElementById('card-' + dayId);
+    if (!card) return;
+    var rows = card.querySelectorAll('.ex-row-edit');
+    var newList = [];
+    rows.forEach(function(row){
+      newList.push({
+        n: row.querySelector('.ex-edit-n').value.trim() || 'Nuevo ejercicio',
+        sr: row.querySelector('.ex-edit-sr').value.trim(),
+        rir: row.querySelector('.ex-edit-rir').value.trim(),
+        t: row.querySelector('.ex-edit-t').value.trim()
+      });
     });
+    rutina[dayIdx].ejercicios = newList;
+  }
 
-    html += '</div>';
-    card.innerHTML = html;
-    container.appendChild(card);
+  function renderRutina(){
+    rutinaContainer.innerHTML = '';
+    rutina.forEach(function(day){
+      var card = document.createElement('div');
+      card.className = 'card p-4 scroll-mt-20';
+      card.id = 'card-' + day.id;
+
+      var doneCount = day.ejercicios.filter(function(_, i){ return checks[day.id+'_'+i]; }).length;
+      var isEditing = editingDay === day.id;
+
+      var headerRight = isEditing
+        ? '<div class="flex items-center gap-2 shrink-0">' +
+            '<button class="save-day-btn text-xs px-2 py-1.5 rounded-lg accent-bg text-black font-bold" data-day="'+day.id+'">💾 Guardar</button>' +
+            '<button class="cancel-day-btn text-xs px-2 py-1.5 rounded-lg bg-white/5 border border-white/10" data-day="'+day.id+'">✖️</button>' +
+          '</div>'
+        : '<div class="flex items-center gap-2 shrink-0">' +
+            '<span class="pill bg-white/10 progress-pill" data-day="'+day.id+'">'+doneCount+'/'+day.ejercicios.length+'</span>' +
+            '<button class="edit-toggle-btn text-xs px-2 py-1.5 rounded-lg bg-white/5 border border-white/10" data-day="'+day.id+'">✏️</button>' +
+          '</div>';
+
+      var html = '<div class="flex justify-between items-center mb-3">' +
+        '<div><p class="text-[11px] font-bold uppercase tracking-wide" style="color:'+day.color+'">'+escHtml(day.dia)+'</p>' +
+        '<h3 class="font-bold text-sm">'+escHtml(day.nombre)+'</h3></div>' +
+        headerRight +
+        '</div><div class="space-y-2">';
+
+      if (isEditing) {
+        day.ejercicios.forEach(function(ex, i){
+          html += '<div class="ex-row-edit flex flex-col gap-2 p-3 rounded-lg card-2" data-idx="'+i+'">' +
+            '<div class="flex gap-2">' +
+              '<input class="edit-input ex-edit-n flex-1" value="'+escAttr(ex.n)+'" placeholder="Nombre del ejercicio">' +
+              '<button class="del-ex-btn text-red-400 px-2 text-lg" data-day="'+day.id+'" data-idx="'+i+'">🗑️</button>' +
+            '</div>' +
+            '<div class="flex gap-2">' +
+              '<input class="edit-input ex-edit-sr" style="width:45%" value="'+escAttr(ex.sr)+'" placeholder="Series x Reps">' +
+              '<input class="edit-input ex-edit-rir" style="width:25%" value="'+escAttr(ex.rir)+'" placeholder="RIR">' +
+            '</div>' +
+            '<textarea class="edit-input ex-edit-t" rows="2" placeholder="Nota de transferencia al fútbol">'+escHtml(ex.t)+'</textarea>' +
+          '</div>';
+        });
+        html += '<button class="add-ex-btn w-full py-2 rounded-lg bg-white/5 border border-dashed border-white/20 text-xs text-gray-400 font-semibold mt-1" data-day="'+day.id+'">+ Agregar ejercicio</button>';
+      } else {
+        day.ejercicios.forEach(function(ex, i){
+          var key = day.id + '_' + i;
+          var isDone = !!checks[key];
+          html += '<div class="ex-row flex gap-3 items-start p-3 rounded-lg card-2 '+(isDone?'done':'')+'" data-key="'+key+'" data-day="'+day.id+'">' +
+            '<input type="checkbox" class="ex-check mt-0.5" '+(isDone?'checked':'')+'>' +
+            '<div class="flex-1">' +
+              '<p class="ex-name text-sm font-semibold">'+escHtml(ex.n)+'</p>' +
+              '<div class="flex gap-2 mt-1 flex-wrap">' +
+                '<span class="pill bg-black/40">'+escHtml(ex.sr)+'</span>' +
+                '<span class="pill bg-black/40">RIR '+escHtml(ex.rir)+'</span>' +
+              '</div>' +
+              (ex.t ? '<p class="text-[11px] text-gray-400 mt-1.5"><span class="font-bold accent-text">⚽ Transferencia: </span>'+escHtml(ex.t)+'</p>' : '') +
+            '</div>' +
+          '</div>';
+        });
+      }
+
+      html += '</div>';
+      card.innerHTML = html;
+      rutinaContainer.appendChild(card);
+    });
+    renderTodayBanner();
+  }
+
+  rutinaContainer.addEventListener('click', function(e){
+    var editBtn = e.target.closest('.edit-toggle-btn');
+    if (editBtn) { editingDay = editBtn.dataset.day; renderRutina(); return; }
+
+    var cancelBtn = e.target.closest('.cancel-day-btn');
+    if (cancelBtn) { editingDay = null; renderRutina(); return; }
+
+    var saveBtn = e.target.closest('.save-day-btn');
+    if (saveBtn) {
+      syncEditingInputsToModel(saveBtn.dataset.day);
+      Object.keys(checks).forEach(function(k){
+        if (k.indexOf(saveBtn.dataset.day + '_') === 0) delete checks[k];
+      });
+      saveChecks();
+      saveRutina();
+      editingDay = null;
+      renderRutina();
+      return;
+    }
+
+    var delBtn = e.target.closest('.del-ex-btn');
+    if (delBtn) {
+      syncEditingInputsToModel(delBtn.dataset.day);
+      var dIdxDel = rutina.findIndex(function(dd){ return dd.id === delBtn.dataset.day; });
+      rutina[dIdxDel].ejercicios.splice(parseInt(delBtn.dataset.idx, 10), 1);
+      renderRutina();
+      editingDay = delBtn.dataset.day;
+      return;
+    }
+
+    var addBtn = e.target.closest('.add-ex-btn');
+    if (addBtn) {
+      syncEditingInputsToModel(addBtn.dataset.day);
+      var dIdxAdd = rutina.findIndex(function(dd){ return dd.id === addBtn.dataset.day; });
+      rutina[dIdxAdd].ejercicios.push({n:'', sr:'', rir:'', t:''});
+      editingDay = addBtn.dataset.day;
+      renderRutina();
+      return;
+    }
   });
 
-  container.addEventListener('change', function(e){
+  rutinaContainer.addEventListener('change', function(e){
     if (!e.target.classList.contains('ex-check')) return;
     var row = e.target.closest('.ex-row');
     var key = row.dataset.key;
-    var dayId = row.dataset.day;
     checks[key] = e.target.checked;
     row.classList.toggle('done', e.target.checked);
     saveChecks();
@@ -447,15 +916,82 @@
     if (!confirm('¿Reiniciar todos los checks de la semana?')) return;
     checks = {};
     saveChecks();
-    document.querySelectorAll('.ex-check').forEach(function(cb){ cb.checked = false; });
-    document.querySelectorAll('.ex-row').forEach(function(r){ r.classList.remove('done'); });
-    document.querySelectorAll('.progress-pill').forEach(function(p){
-      var total = p.closest('.card').querySelectorAll('.ex-row').length;
-      p.textContent = '0/' + total;
-    });
+    renderRutina();
   });
 
-  // ---------- PROGRESO / PESO ----------
+  document.getElementById('restore-rutina-default').addEventListener('click', function(){
+    if (!confirm('¿Restaurar la rutina original de 4 días? Se perderán tus ediciones personalizadas.')) return;
+    rutina = JSON.parse(JSON.stringify(RUTINA_DEFAULT));
+    localStorage.removeItem(RUTINA_KEY);
+    editingDay = null;
+    renderRutina();
+  });
+
+  // ---------- PLANIFICADOR SEMANAL ----------
+  var PLANNER_KEY = 'panelfutbol_planner_v1';
+  var PLANNER_DEFAULT = {1:'d1', 2:'d2', 3:'rest', 4:'d3', 5:'d4', 6:'futbol', 0:'rest'};
+  var planner = Object.assign({}, PLANNER_DEFAULT);
+  try {
+    var savedPlanner = JSON.parse(localStorage.getItem(PLANNER_KEY) || 'null');
+    if (savedPlanner) planner = savedPlanner;
+  } catch(e){}
+
+  var DAY_ORDER = [1,2,3,4,5,6,0];
+  var DAY_LABELS = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes',6:'Sábado',0:'Domingo'};
+
+  var plannerList = document.getElementById('planner-list');
+  DAY_ORDER.forEach(function(dayNum){
+    var row = document.createElement('div');
+    row.className = 'flex items-center justify-between gap-3';
+    row.innerHTML = '<span class="text-xs font-semibold w-20 shrink-0">'+DAY_LABELS[dayNum]+'</span>' +
+      '<select class="planner-select edit-input flex-1" data-day="'+dayNum+'">' +
+        '<option value="d1">Día 1 · Torso A</option>' +
+        '<option value="d2">Día 2 · Pierna A</option>' +
+        '<option value="d3">Día 3 · Torso B</option>' +
+        '<option value="d4">Día 4 · Pierna B</option>' +
+        '<option value="futbol">⚽ Fútbol</option>' +
+        '<option value="rest">😴 Descanso</option>' +
+      '</select>';
+    plannerList.appendChild(row);
+    row.querySelector('select').value = planner[dayNum] || 'rest';
+  });
+
+  plannerList.addEventListener('change', function(e){
+    if (!e.target.classList.contains('planner-select')) return;
+    planner[e.target.dataset.day] = e.target.value;
+    localStorage.setItem(PLANNER_KEY, JSON.stringify(planner));
+    renderTodayBanner();
+  });
+
+  function renderTodayBanner(){
+    var todayNum = new Date().getDay();
+    var assign = planner[todayNum] || 'rest';
+    var banner = document.getElementById('today-banner');
+    var text, cta = '';
+    if (assign === 'futbol') {
+      text = '⚽ <b>Hoy toca fútbol.</b> No hace falta ir al gym — enfócate en calentar bien e hidratarte para el partido.';
+    } else if (assign === 'rest') {
+      text = '😴 <b>Hoy toca descanso.</b> Aprovecha para dormir bien y dejar que el cuerpo recupere.';
+    } else {
+      var dayObj = rutina.find(function(dd){ return dd.id === assign; });
+      text = '🏋️ <b>Hoy toca: ' + (dayObj ? escHtml(dayObj.nombre) : assign) + '</b>';
+      cta = '<button class="scroll-to-day-btn mt-2 text-xs font-bold accent-text underline" data-day="'+assign+'">Ver rutina de hoy ↓</button>';
+    }
+    banner.innerHTML = '<p class="text-sm">'+text+'</p>' + cta;
+  }
+
+  document.getElementById('today-banner').addEventListener('click', function(e){
+    var btn = e.target.closest('.scroll-to-day-btn');
+    if (!btn) return;
+    var target = document.getElementById('card-' + btn.dataset.day);
+    if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  renderRutina();
+
+  // =====================================================================
+  // PROGRESO / PESO
+  // =====================================================================
   var WEIGHT_KEY = 'panelfutbol_weights_v1';
   var PESO_INICIAL = 85.0;
   var history = JSON.parse(localStorage.getItem(WEIGHT_KEY) || '[]');
