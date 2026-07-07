@@ -99,6 +99,23 @@
     background-size: 16px;
     padding-right: 32px;
   }
+
+  .coach-fab {
+    position: fixed; bottom: 88px; right: 18px; z-index: 45;
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; box-shadow: 0 4px 24px rgba(204,255,0,.35);
+  }
+  .chat-chip {
+    white-space: nowrap; background: #26262f; border: 1px solid #3a3a44;
+    border-radius: 999px; padding: 6px 12px; font-size: 11px; font-weight: 600; color: #ddd;
+  }
+  .chat-bubble-user {
+    background: var(--accent); color: #0a0a0d; border-radius: 14px 14px 2px 14px;
+  }
+  .chat-bubble-bot {
+    background: #26262f; color: #fff; border-radius: 14px 14px 14px 2px;
+  }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen pb-24">
@@ -249,7 +266,7 @@
       <div id="food-results-local" class="space-y-2 mt-3"></div>
 
       <button id="btn-search-online" class="hidden w-full mt-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300 font-semibold">
-        🌐 Buscar también en línea (Open Food Facts)
+        🇨🇱 Buscar productos de Chile en línea (Open Food Facts)
       </button>
       <p id="food-online-status" class="text-xs text-gray-500 mt-2 hidden"></p>
       <div id="food-results-online" class="space-y-2 mt-2"></div>
@@ -343,6 +360,29 @@
     </button>
   </div>
 </nav>
+
+<!-- COACH IA FLOTANTE -->
+<button id="coach-fab" class="coach-fab glow-btn">🤖</button>
+
+<div id="coach-modal" class="fixed inset-0 z-50 hidden">
+  <div id="coach-backdrop" class="absolute inset-0 bg-black/70"></div>
+  <div class="absolute bottom-0 left-0 right-0 bg-[#141418] rounded-t-3xl border-t border-white/10 max-w-lg mx-auto flex flex-col" style="height:85vh">
+    <div class="flex justify-between items-center px-4 py-3 border-b border-white/10 shrink-0">
+      <div>
+        <p class="font-bold text-sm">🤖 Coach IA</p>
+        <p class="text-[11px] text-gray-500">Tu personal trainer virtual (FAQ)</p>
+      </div>
+      <button id="coach-close" class="text-gray-400 text-2xl px-2 leading-none">✕</button>
+    </div>
+    <div id="coach-chips" class="flex gap-2 overflow-x-auto px-4 py-3 border-b border-white/5 shrink-0"></div>
+    <div id="coach-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+    <form id="coach-form" class="flex gap-2 p-3 border-t border-white/10 shrink-0">
+      <input type="text" id="coach-input" placeholder="Escribe tu pregunta..." autocomplete="off"
+        class="flex-1 bg-[#26262f] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[var(--accent)]">
+      <button type="submit" class="glow-btn px-4 rounded-xl text-lg font-bold">➤</button>
+    </form>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -498,7 +538,19 @@
     {n:'Naranja', k:47, p:0.9, c:12, f:0.1, s:150},
     {n:'Frutilla', k:32, p:0.7, c:7.7, f:0.3, s:100},
     {n:'Uva', k:69, p:0.7, c:18, f:0.2, s:100},
-    {n:'Sandía', k:30, p:0.6, c:7.6, f:0.2, s:150}
+    {n:'Sandía', k:30, p:0.6, c:7.6, f:0.2, s:150},
+    {n:'Empanada de pino (horneada)', k:270, p:9, c:28, f:14, s:170},
+    {n:'Pan amasado', k:280, p:8, c:52, f:4, s:90},
+    {n:'Marraqueta', k:270, p:9, c:55, f:1.5, s:80},
+    {n:'Completo italiano', k:230, p:7, c:20, f:14, s:200},
+    {n:'Pastel de choclo', k:150, p:7, c:15, f:7, s:300},
+    {n:'Cazuela de vacuno', k:90, p:7, c:8, f:3, s:350},
+    {n:'Porotos granados', k:120, p:6, c:18, f:3, s:300},
+    {n:'Charquicán', k:110, p:6, c:14, f:3.5, s:300},
+    {n:'Sopaipillas (fritas)', k:320, p:5, c:40, f:15, s:40},
+    {n:'Mote con huesillo', k:90, p:1, c:22, f:0.2, s:250},
+    {n:'Choripán', k:290, p:12, c:22, f:17, s:180},
+    {n:'Pebre', k:40, p:1, c:6, f:1.5, s:30}
   ];
 
   var GOALS = { kcal: 2000, p: 165, c: 185, f: 65 };
@@ -645,26 +697,39 @@
     onlineBtn.classList.remove('hidden');
   });
 
+  function fetchOFF(domain, q){
+    var url = 'https://' + domain + '.openfoodfacts.org/api/v2/search?search_terms=' + encodeURIComponent(q) + '&page_size=8&fields=product_name,brands,nutriments';
+    return fetch(url).then(function(r){
+      if (!r.ok) throw new Error('bad status ' + r.status);
+      return r.json();
+    });
+  }
+
   onlineBtn.addEventListener('click', function(){
     var q = searchInput.value.trim();
     if (!q) return;
     onlineStatus.classList.remove('hidden');
-    onlineStatus.textContent = 'Buscando en Open Food Facts...';
+    onlineStatus.textContent = 'Buscando en Open Food Facts Chile...';
     onlineResultsEl.innerHTML = '';
 
-    var url = 'https://world.openfoodfacts.org/api/v2/search?search_terms=' + encodeURIComponent(q) + '&page_size=8&fields=product_name,brands,nutriments';
-
-    fetch(url).then(function(r){ return r.json(); }).then(function(data){
-      var products = (data.products || []).filter(function(p){
+    fetchOFF('cl', q).then(function(data){
+      return { data: data, label: 'Resultados en Chile:' };
+    }).catch(function(){
+      onlineStatus.textContent = 'Chile no respondió, buscando en catálogo global...';
+      return fetchOFF('world', q).then(function(data){
+        return { data: data, label: 'Resultados globales (no filtrados a Chile):' };
+      });
+    }).then(function(result){
+      var products = (result.data.products || []).filter(function(p){
         return p.product_name && p.nutriments && p.nutriments['energy-kcal_100g'] != null;
       });
 
       if (products.length === 0) {
-        onlineStatus.textContent = 'Sin resultados online para "' + q + '".';
+        onlineStatus.textContent = 'Sin resultados para "' + q + '". Prueba con el nombre genérico (ej. "yogurt" en vez de la marca).';
         return;
       }
 
-      onlineStatus.textContent = 'Resultados online:';
+      onlineStatus.textContent = result.label;
       currentOnlineResults = products.map(function(p){
         return {
           n: p.product_name + (p.brands ? ' — ' + p.brands.split(',')[0] : ''),
@@ -1080,6 +1145,115 @@
   });
 
   renderHistory();
+
+  // =====================================================================
+  // COACH IA — PERSONAL TRAINER VIRTUAL (basado en reglas, sin costo)
+  // =====================================================================
+  var COACH_KEY = 'panelfutbol_chat_v1';
+
+  function normalize(s){
+    return String(s || '').toLowerCase()
+      .replace(/[áàäâ]/g, 'a')
+      .replace(/[éèëê]/g, 'e')
+      .replace(/[íìïî]/g, 'i')
+      .replace(/[óòöô]/g, 'o')
+      .replace(/[úùüû]/g, 'u')
+      .replace(/ñ/g, 'n');
+  }
+
+  var FAQ = [
+    { kws:['proteina'], a:'🥩 Necesitas ~165g de proteína al día (~1.9 g/kg). En déficit calórico es lo más importante para no perder músculo. Prioriza pollo, huevo, pescado y un scoop de whey post-entreno para llegar cómodo a la meta.' },
+    { kws:['creatina'], a:'💊 5g de creatina monohidratada todos los días, a cualquier hora (no hace falta "cargar" ni ciclar). Tómala junto al batido post-entreno para que se te haga hábito — mejora tu potencia en los piques del fútbol.' },
+    { kws:['3 dias','tres dias','2 dias','dos dias','poco tiempo','no puedo entrenar','solo puedo'], a:'📅 Si esta semana solo tienes 2-3 días, prioriza Día 1 (Torso A), Día 2 (Pierna A - Potencia) y Día 4 (Pierna B - Isquios/Prevención). El Torso B es el más sacrificable, puedes fusionar 2-3 ejercicios clave al final del Día 1.' },
+    { kws:['rodilla','isquio','pubalgia','lesion','me duele','dolor'], a:'⚠️ Si sientes dolor (no solo fatiga muscular), baja el peso o detén el ejercicio — no entrenes con dolor articular. La rutina ya incluye prevención (curl femoral, hip thrust, aductores/abductores). Si el dolor persiste más de unos días, consulta a un kinesiólogo o traumatólogo antes de seguir cargando.' },
+    { kws:['estancad','meseta','no bajo','no baja','plateau','no estoy bajando'], a:'📉 Un estancamiento de 1-2 semanas es normal (retención de agua, sueño, estrés). Antes de bajar más calorías, revisa: ¿estás pesando/registrando de verdad todo lo que comes?, ¿duermes 7-8h?, ¿tomaste el peso siempre en las mismas condiciones? Dale 2-3 semanas antes de ajustar el déficit.' },
+    { kws:['dormir','sueno','descansar','descanso'], a:'😴 Apunta a 7-8h reales de sueño. Apaga pantallas 30-45 min antes, mantén la pieza fresca (18-20°C) y evita cafeína después de las 16:00. El cuerpo quema más grasa y recupera más músculo durante el sueño profundo.' },
+    { kws:['antes del partido','despues del partido','partido de futbol','dia del partido'], a:'⚽ Antes del partido (2-3h): carbohidratos moderados y fáciles de digerir (arroz, pan, plátano), evita exceso de grasa/fibra. Después del partido: prioriza proteína + carbohidratos dentro de la primera hora (ej. whey + plátano) para recuperar glucógeno y reparar músculo.' },
+    { kws:['velocidad','agilidad','rapido','piques','sprint'], a:'💨 La velocidad mejora con: 1) creatina (potencia en esfuerzos cortos), 2) el trabajo de fuerza de Pierna A (sentadilla, prensa), y 3) practicar sprints cortos de 10-20m. La técnica de frenado (isquios fuertes) también te hace más ágil en los cambios de dirección.' },
+    { kws:['calorias','cuantas kcal','deficit'], a:'🔥 Tu meta diaria es ~2000 kcal (déficit de ~500-600 kcal desde tu gasto estimado de 2500-2600 kcal). Esto te da una pérdida sana de 0.5-0.7 kg por semana sin sacrificar demasiado músculo.' },
+    { kws:['alternativa','no tengo maquina','reemplaz','no hay maquina','esta ocupada'], a:'🔄 Si una máquina está ocupada, busca un ejercicio que mueva el mismo patrón: empuje horizontal (press banca ↔ press con mancuernas), tracción (jalón ↔ remo en polea), o el mismo grupo muscular con mancuernas/peso libre. Dime el ejercicio específico y te doy una alternativa concreta.' },
+    { kws:['hambre','antojo','ansiedad'], a:'🥗 En déficit es normal tener más hambre. Prioriza verduras (volumen, poca caloría), proteína en cada comida (más saciante) y toma agua antes de comer. Un antojo puntual no arruina el progreso, lo que importa es el promedio semanal.' },
+    { kws:[' rir','que es rir','rir?'], a:'📊 RIR = Repeticiones en Recámara (o Reserva): cuántas repeticiones más podrías hacer antes de fallar. RIR 2 significa parar la serie sintiendo que te quedaban 2 repeticiones en el tanque. Te permite entrenar duro sin llegar al fallo técnico en cada serie.' },
+    { kws:['cafe','cafeina'], a:'☕ Evita la cafeína después de las 16:00 — tiene una vida media de 5-6h y puede arruinar tu sueño profundo aunque sientas que "duermes bien", lo que ralentiza la recuperación y la quema de grasa nocturna.' },
+    { kws:['whey','scoop','batido'], a:'🥤 1.5 scoops de whey al día (~37g): 1 scoop dentro de los 60 min post-entreno, y 0.5 scoop como snack o para completar tus 165g de proteína del día.' },
+    { kws:['hola','buenas','hey','holi'], a:'👋 ¡Hola! Soy tu Coach IA. Pregúntame sobre proteína, creatina, la rutina, lesiones, sueño, fútbol o calorías — o toca una de las sugerencias de arriba.' },
+    { kws:['gracias'], a:'💪 ¡De nada! Sigue firme con el plan, los resultados llegan con consistencia semana a semana.' }
+  ];
+
+  function matchFAQ(text){
+    var t = normalize(text);
+    for (var i = 0; i < FAQ.length; i++){
+      var hit = FAQ[i].kws.some(function(k){ return t.indexOf(normalize(k)) !== -1; });
+      if (hit) return FAQ[i].a;
+    }
+    return null;
+  }
+
+  var chatMessages;
+  try {
+    chatMessages = JSON.parse(localStorage.getItem(COACH_KEY) || 'null');
+  } catch(e){ chatMessages = null; }
+  if (!chatMessages || !chatMessages.length) {
+    chatMessages = [{ who:'bot', text:'¡Hola! Soy tu Coach IA 🤖💪. Puedo ayudarte con dudas rápidas de nutrición, entrenamiento, suplementos y fútbol. Toca una sugerencia o escribe tu pregunta.' }];
+  }
+  function saveChat(){ localStorage.setItem(COACH_KEY, JSON.stringify(chatMessages)); }
+
+  var coachMessagesEl = document.getElementById('coach-messages');
+  function renderChat(){
+    coachMessagesEl.innerHTML = '';
+    chatMessages.forEach(function(m){
+      var row = document.createElement('div');
+      row.className = 'flex ' + (m.who === 'user' ? 'justify-end' : 'justify-start');
+      var bubble = document.createElement('div');
+      bubble.className = (m.who === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot') + ' px-3 py-2 text-sm max-w-[80%]';
+      bubble.textContent = m.text;
+      row.appendChild(bubble);
+      coachMessagesEl.appendChild(row);
+    });
+    coachMessagesEl.scrollTop = coachMessagesEl.scrollHeight;
+  }
+
+  function sendCoachMessage(text){
+    text = text.trim();
+    if (!text) return;
+    chatMessages.push({ who:'user', text: text });
+    var answer = matchFAQ(text) || 'No estoy seguro de esa pregunta 🤔. Prueba preguntando sobre: proteína, creatina, entrenar con poco tiempo, dolores/lesiones, estancamiento de peso, sueño, fútbol, calorías, RIR o cafeína.';
+    chatMessages.push({ who:'bot', text: answer });
+    saveChat();
+    renderChat();
+  }
+
+  var CHIPS = ['¿Cuánta proteína necesito?', '¿Cómo tomo la creatina?', 'Solo puedo entrenar 3 días', 'Me duele la rodilla', 'Llevo semanas sin bajar de peso', '¿Qué como antes del partido?', '¿Qué es el RIR?'];
+  var chipsEl = document.getElementById('coach-chips');
+  CHIPS.forEach(function(c){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chat-chip shrink-0';
+    btn.textContent = c;
+    btn.addEventListener('click', function(){ sendCoachMessage(c); });
+    chipsEl.appendChild(btn);
+  });
+
+  document.getElementById('coach-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var coachInput = document.getElementById('coach-input');
+    if (!coachInput.value.trim()) return;
+    sendCoachMessage(coachInput.value);
+    coachInput.value = '';
+  });
+
+  document.getElementById('coach-fab').addEventListener('click', function(){
+    document.getElementById('coach-modal').classList.remove('hidden');
+    renderChat();
+  });
+  document.getElementById('coach-close').addEventListener('click', function(){
+    document.getElementById('coach-modal').classList.add('hidden');
+  });
+  document.getElementById('coach-backdrop').addEventListener('click', function(){
+    document.getElementById('coach-modal').classList.add('hidden');
+  });
+
+  renderChat();
 })();
 </script>
 </body>
